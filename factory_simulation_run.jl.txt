@@ -1,0 +1,38 @@
+include("factory_simulation.jl")
+
+
+#initialise
+seed = 1
+T = 20000.0
+mean_interarrival = 60.0
+mean_construction_time = 45.0
+mean_interbreakdown_time = 2880.0
+mean_repair_time = 180.0
+P = Parameters(seed, mean_interarrival, mean_construction_time, mean_interbreakdown_time, mean_repair_time)
+
+# file directory and name; * concatenates strings.
+dir = pwd()*"/data/"*"/seed"*string(P.seed)    # directory name
+mkpath(dir)                          # this creates the directory 
+file_entities = dir*"/entities.csv"  # the name of the data file (informative) 
+file_state = dir*"/state.csv"        # the name of the data file (informative) 
+fid_entities = open(file_entities, "w") # open the file for writing
+fid_state = open(file_state, "w")       # open the file for writing
+
+write_metadata(fid_entities)
+write_metadata(fid_state)
+write_parameters(fid_entities, P, T)
+write_parameters(fid_state, P, T)
+
+# headers
+print(fid_entities,"id,arrival_time,start_service_time,completion_time,interrupted")
+println(fid_entities)
+print(fid_state,"time,event_id,event_type,length_event_list,length_queue,in_service,machine_status")
+println(fid_state)
+
+# run the actual simulation
+(system,R) = initialise(P) 
+run!(system, R, T, fid_state, fid_entities)
+
+# remember to close the files
+close(fid_entities)
+close(fid_state)
